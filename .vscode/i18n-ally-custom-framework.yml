@@ -1,0 +1,21 @@
+# 使用 general 模式（兼容 properties）
+framework: general
+
+languageIds:
+  - json
+
+# 匹配路径：locale 在第一级目录
+pathMatcher: "{locale}/{namespace}.json"
+
+# 定义语言别名
+locales:
+  zhs: zh-CN
+  zht: zh-TW
+  eng: en
+  jpn: ja
+  kor: ko
+
+# 默认源语言
+sourceLanguage: en
+
+displayLanguage: zhs

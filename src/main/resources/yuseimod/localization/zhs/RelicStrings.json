@@ -1,0 +1,16 @@
+{
+  "${modID}:RelicID": {
+    "NAME": "Good Relic",
+    "FLAVOR": "Flavor text displayed in detailed relic view.",
+    "DESCRIPTIONS": [
+      "Gain [E] at the start of your turn. [E] is an energy icon."
+    ]
+  },
+  "${modID}:CrimsonDragon": {
+    "NAME": "龙印者",
+    "FLAVOR": "据星之居民传说，能呼唤作为神的赤红龙并拥有龙之印记的人。",
+    "DESCRIPTIONS": [
+      "在你的回合开始时，获得[E]。"
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "maven.view": "flat",
+
+  "i18n-ally.localeCountryMap": {
+    "zhs": "zh-CN",
+    "zht": "zh-TW",
+    "eng": "en",
+    "jpn": "ja",
+    "kor": "ko"
+  },
+
+  // 本地化目录（i18n-ally 会扫描）
+  "i18n-ally.localesPaths": ["src/main/resources/yuseimod/localization"],
+
+  // 源语言（你的原始是中文 zhs）
+  "i18n-ally.sourceLanguage": "en",
+  "i18n-ally.displayLanguage": "zhs",
+
+  "i18n-ally.pathMatcher": "{locale}/{namespace}.json",
+  // 建议忽略一些非翻译的文件
+  "i18n-ally.ignoredLocales": ["target"],
+  "i18n-ally.keystyle": "nested",
+  "i18n-ally.disabled": false,
+  "i18n-ally.disablePathParsing": false,
+  "i18n-ally.editor.preferEditor": true,
+  "i18n-ally.extract.autoDetect": false,
+  "i18n-ally.namespace": false,
+  "java.saveActions.organizeImports": false,
+  "Codegeex.RepoIndex": true,
+  "Codegeex.CompletionDelay": 0.5,
+  "Codegeex.Comment.LanguagePreference": "English",
+  "Codegeex.CommitMessage.LanguagePreference": "English"
+}
