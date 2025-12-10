@@ -1,5 +1,7 @@
 package yuseimod.utils;
 
+import static yuseimod.YuseiMod.makeID;
+
 import java.util.ArrayList;
 
 import com.megacrit.cardcrawl.cards.AbstractCard;
@@ -11,7 +13,7 @@ import yuseimod.cards.monsterCard.AbstractMonsterCard;
 
 public class OrbHelper {
     public static int CallMinionsThisBattle = 0;
-    public static ArrayList<AbstractYGOMonster> DeadMinionsThisBattle = new ArrayList();
+    public static ArrayList<AbstractYGOMonster> DeadMinionsThisBattle = new ArrayList<AbstractYGOMonster>();
 
     public static ArrayList<AbstractCard> ChooseOneMinionGroup(String id, int magicnum1) {
         ArrayList<AbstractCard> abstractCards = new ArrayList<AbstractCard>();
@@ -158,7 +160,7 @@ public class OrbHelper {
 
     public static AbstractMonsterCard GetCardInstance(AbstractYGOMonster m) {
         try {
-            String id = m.ID.replace("Monster_", "yuseimod.cards.monsterCard.");
+            String id = m.ID.replace(makeID("Monster_"), "yuseimod.cards.monsterCard.Call");
             return (AbstractMonsterCard)((Object)Class.forName(id).newInstance());
         }
         catch (ClassNotFoundException var2) {

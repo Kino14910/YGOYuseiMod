@@ -177,6 +177,8 @@ public abstract class YuseiCard extends AbstractSignatureCard  {
             case BLOCK:
                 calculateVarAsBlock(key);
                 break;
+            default:
+                break;
         }
 
         if (!customVars.containsKey(key)) {

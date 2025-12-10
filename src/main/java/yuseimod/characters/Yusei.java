@@ -27,6 +27,7 @@ import com.megacrit.cardcrawl.screens.CharSelectInfo;
 import basemod.abstracts.CustomPlayer;
 import yuseimod.cards.Defend;
 import yuseimod.cards.Strike;
+import yuseimod.cards.monsterCard.SpeedWarrior;
 import yuseimod.characters.CustomEnums.YGOCardColor;
 import yuseimod.relics.CrimsonDragon;
 import yuseimod.utils.Sounds;
@@ -74,9 +75,10 @@ public class Yusei extends CustomPlayer{
 
         //添加初始卡组
         ArrayList<String> retVal = new ArrayList<>(Arrays.asList(
-            Strike.ID, Strike.ID, Strike.ID,
-            Defend.ID, Defend.ID, Defend.ID,
-            Defend.ID, Defend.ID
+            Strike.ID, Strike.ID, 
+            Defend.ID, Defend.ID, 
+            SpeedWarrior.ID, SpeedWarrior.ID
+
         ));
         return retVal;
     }

@@ -1,6 +1,7 @@
 package yuseimod;
 
 import static yuseimod.characters.Yusei.PlayerColorEnum.YUSEI;
+import static yuseimod.utils.ModHelper.addToBot;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -29,7 +30,14 @@ import com.evacipated.cardcrawl.modthespire.Patcher;
 import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInitializer;
 import com.google.gson.Gson;
+import com.megacrit.cardcrawl.actions.AbstractGameAction;
+import com.megacrit.cardcrawl.actions.common.DrawCardAction;
+import com.megacrit.cardcrawl.actions.common.ReducePowerAction;
+import com.megacrit.cardcrawl.cards.AbstractCard;
+import com.megacrit.cardcrawl.cards.DamageInfo;
+import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.core.Settings;
+import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.helpers.CardHelper;
 import com.megacrit.cardcrawl.localization.CardStrings;
 import com.megacrit.cardcrawl.localization.CharacterStrings;
@@ -39,6 +47,9 @@ import com.megacrit.cardcrawl.localization.PotionStrings;
 import com.megacrit.cardcrawl.localization.PowerStrings;
 import com.megacrit.cardcrawl.localization.RelicStrings;
 import com.megacrit.cardcrawl.localization.UIStrings;
+import com.megacrit.cardcrawl.orbs.AbstractOrb;
+import com.megacrit.cardcrawl.orbs.EmptyOrbSlot;
+import com.megacrit.cardcrawl.rooms.AbstractRoom;
 import com.megacrit.cardcrawl.unlock.UnlockTracker;
 
 import basemod.AutoAdd;
@@ -49,13 +60,18 @@ import basemod.interfaces.EditCharactersSubscriber;
 import basemod.interfaces.EditKeywordsSubscriber;
 import basemod.interfaces.EditRelicsSubscriber;
 import basemod.interfaces.EditStringsSubscriber;
+import basemod.interfaces.OnPlayerDamagedSubscriber;
+import basemod.interfaces.OnStartBattleSubscriber;
 import basemod.interfaces.PostInitializeSubscriber;
+import me.antileaf.signature.utils.SignatureHelper;
+import yuseimod.YGOMonsters.AbstractYGOMonster;
 import yuseimod.cards.YuseiCard;
 import yuseimod.characters.CustomEnums.YGOCardColor;
 import yuseimod.characters.Yusei;
 import yuseimod.relics.BaseRelic;
 import yuseimod.utils.GeneralUtils;
 import yuseimod.utils.KeywordInfo;
+import yuseimod.utils.OrbHelper;
 import yuseimod.utils.Sounds;
 import yuseimod.utils.TextureLoader;
 
@@ -67,7 +83,9 @@ public class YuseiMod implements
         EditRelicsSubscriber,
         EditKeywordsSubscriber,
         AddAudioSubscriber,
-        PostInitializeSubscriber
+        PostInitializeSubscriber,
+        OnPlayerDamagedSubscriber,
+        OnStartBattleSubscriber
          {
     public static ModInfo info;
     public static String modID; //Edit your pom.xml to change this
@@ -91,6 +109,7 @@ public class YuseiMod implements
     private static final String ENERGY_ORB_CC = imagePath("512/MASTEROrb");
     private static final String ENERGY_ORB_CC_PORTRAIT = imagePath("1024/MASTEROrb");
 
+    private int dmg;
     public static SpireConfig config;
     
     //This is used to prefix the IDs of various objects like cards and relics,
@@ -121,10 +140,10 @@ public class YuseiMod implements
         //If you want to set up a config panel, that will be done here.
         //You can find information about this on the BaseMod wiki page "Mod Config and Panel".
         BaseMod.registerModBadge(badgeTexture, info.Name, GeneralUtils.arrToString(info.Authors), info.Description, null);
-        // new AutoAdd(YuseiMod.modID)
-        //     .packageFilter("yuseimod.cards")
-        //     .any(AbstractCard.class, (info, card) -> {SignatureHelper.unlock(card.cardID, true);
-        // });
+        new AutoAdd(YuseiMod.modID)
+            .packageFilter("yuseimod.cards")
+            .any(AbstractCard.class, (info, card) -> {SignatureHelper.unlock(card.cardID, true);
+        });
     }
 
     /*----------Localization----------*/
@@ -299,6 +318,9 @@ public class YuseiMod implements
     public static String eventPath(String file) {
         return imagePath("events/" + file);
     }
+    public static String orbPath(String file) {
+        return imagePath("orbs/" + file.replace(makeID("Monster_"), ""));
+    }
 
 
     /**
@@ -362,7 +384,6 @@ public class YuseiMod implements
         AutoAdd autoAdd = new AutoAdd(modID);
         //Loads files from this mod
         autoAdd.packageFilter(YuseiCard.class); //In the same package as this class
-
         autoAdd.setDefaultSeen(true) //And marks them as seen in the compendium
                 .cards(); //Adds the cards
     }
@@ -383,4 +404,155 @@ public class YuseiMod implements
                         UnlockTracker.markRelicAsSeen(relic.relicId);
                 });
     }
+
+    private boolean isYusei() {
+        return AbstractDungeon.player instanceof Yusei;
+    }
+
+    @Override
+    public void receiveOnBattleStart(AbstractRoom room) {
+        if(isYusei()) {
+            addToBot(new DrawCardAction(4));
+            OrbHelper.CallMinionsThisBattle = 0;
+            OrbHelper.DeadMinionsThisBattle.clear();
+        }
+    }
+
+    @Override
+    public int receiveOnPlayerDamaged(int amount, DamageInfo info) {
+        if (AbstractDungeon.getCurrRoom().phase == AbstractRoom.RoomPhase.COMBAT && AbstractDungeon.player.orbs.size() > 0) {
+            boolean overBlock = false;
+            this.dmg = amount;
+            if (AbstractDungeon.player.currentBlock > 0) {
+                if (this.dmg - AbstractDungeon.player.currentBlock <= 0) {
+                    AbstractDungeon.player.loseBlock(this.dmg);
+                    return 0;
+                }
+                this.dmg -= AbstractDungeon.player.currentBlock;
+                if (AbstractDungeon.player.hasPower("Plated Armor")) {
+                    AbstractDungeon.actionManager.addToBottom((AbstractGameAction)new ReducePowerAction((AbstractCreature)AbstractDungeon.player, (AbstractCreature)AbstractDungeon.player, "Plated Armor", 1));
+                }
+                overBlock = true;
+            }
+            logger.info("\u5148\u653b\u51fb\u5632\u8bbd\u961f\u53cb");
+            boolean hasMate = false;
+            for (AbstractOrb o : AbstractDungeon.player.orbs) {
+                if (!(o instanceof AbstractYGOMonster)) continue;
+                hasMate = true;
+                break;
+            }
+            if (hasMate) {
+                for (int j = 0; j < AbstractDungeon.player.maxOrbs; ++j) {
+                    int i;
+                    if (AbstractDungeon.player.orbs.get(j) instanceof AbstractYGOMonster) continue;
+                    ((AbstractOrb)AbstractDungeon.player.orbs.get(j)).onEvoke();
+                    EmptyOrbSlot orbSlot = new EmptyOrbSlot();
+                    for (i = j + 1; i < AbstractDungeon.player.orbs.size(); ++i) {
+                        Collections.swap(AbstractDungeon.player.orbs, i, i - 1);
+                    }
+                    AbstractDungeon.player.orbs.set(AbstractDungeon.player.orbs.size() - 1, orbSlot);
+                    for (i = j; i < AbstractDungeon.player.orbs.size(); ++i) {
+                        ((AbstractOrb)AbstractDungeon.player.orbs.get(i)).setSlot(i, AbstractDungeon.player.maxOrbs);
+                    }
+                }
+            }
+            this.onAttackAssitTaunt();
+            this.onAttackAssit();
+            // for (AbstractOrb o : AbstractDungeon.player.orbs) {
+            //     if (!(o instanceof OmaruPolka)) continue;
+            //     ((OmaruPolka)o).refreshOrbs();
+            // }
+            try {
+                int n = this.dmg;
+                return n;
+            }
+            finally {
+                if (overBlock) {
+                    AbstractDungeon.player.loseBlock(AbstractDungeon.player.currentBlock);
+                }
+            }
+        }
+        return amount;
+    }
+    
+    private void onAttackAssit() {
+        logger.info("onAttackAssit");
+        int j = 0;
+        AbstractOrb orb = (AbstractOrb)AbstractDungeon.player.orbs.get(j);
+        logger.info("onAttackAssit\uff1a\u9009\u53d6" + orb.name);
+        if (orb instanceof AbstractYGOMonster) {
+            AbstractYGOMonster student = (AbstractYGOMonster)orb;
+            logger.info("onAttackAssit\uff1a\u73b0\u5728\u53d7\u5230\u4f24\u5bb3\u7684\u662f" + student.name);
+            if (student.DEF > this.dmg) {
+                student.ChangeDEF(-this.dmg, true);
+                student.onDamaged(this.dmg, true);
+                this.dmg = 0;
+                logger.info("onAttackAssit:\u961f\u53cb\u625b\u4e0b\u4e86\u4f24\u5bb3");
+            } else {
+                int i;
+                student.onDamaged(student.DEF, true);
+                this.dmg -= student.DEF;
+                student.DEF = 0;
+                student.isdead = true;
+                // if (TheStar.CombinationIndex[24]) {
+                //     student.AttackEffect();
+                // }
+                // if (student instanceof AiraniIofifteen) {
+                //     this.dmg = 0;
+                // }
+                student.onEvoke();
+                logger.info("onAttackAssit:\u961f\u53cb\u6ca1\u625b\u4e0b\u4f24\u5bb3\uff0c\u6b7b\u4e86");
+                EmptyOrbSlot orbSlot = new EmptyOrbSlot();
+                for (i = 1; i < AbstractDungeon.player.orbs.size(); ++i) {
+                    Collections.swap(AbstractDungeon.player.orbs, i, i - 1);
+                }
+                AbstractDungeon.player.orbs.set(AbstractDungeon.player.orbs.size() - 1, orbSlot);
+                for (i = 0; i < AbstractDungeon.player.orbs.size(); ++i) {
+                    ((AbstractOrb)AbstractDungeon.player.orbs.get(i)).setSlot(i, AbstractDungeon.player.maxOrbs);
+                }
+                this.onAttackAssit();
+            }
+        }
+    }
+
+    private void onAttackAssitTaunt() {
+        logger.info("onAttackAssitTaunt");
+        for (int j = 0; j < AbstractDungeon.player.orbs.size(); ++j) {
+            int i;
+            AbstractOrb orb = (AbstractOrb)AbstractDungeon.player.orbs.get(j);
+            logger.info("onAttackAssitTaunt\uff1a\u9009\u53d6" + orb.name);
+            if (!(orb instanceof AbstractYGOMonster) || !((AbstractYGOMonster)orb).Taunt) continue;
+            logger.info("onAttackAssitTaunt\uff1a\u73b0\u5728\u53d7\u5230\u4f24\u5bb3\u7684\u662f" + orb.name);
+            if (((AbstractYGOMonster)orb).DEF > this.dmg) {
+                ((AbstractYGOMonster)orb).ChangeDEF(-this.dmg, true);
+                ((AbstractYGOMonster)orb).onDamaged(this.dmg, true);
+                this.dmg = 0;
+                logger.info("onAttackAssitTaunt:\u961f\u53cb\u625b\u4e0b\u4e86\u4f24\u5bb3");
+                return;
+            }
+            ((AbstractYGOMonster)orb).onDamaged(((AbstractYGOMonster)orb).DEF, true);
+            this.dmg -= ((AbstractYGOMonster)orb).DEF;
+            ((AbstractYGOMonster)orb).DEF = 0;
+            ((AbstractYGOMonster)orb).isdead = true;
+            // if (TheStar.CombinationIndex[24]) {
+            //     ((AbstractYGOMonster)orb).AttackEffect();
+            // }
+            // if (orb instanceof AiraniIofifteen) {
+            //     this.dmg = 0;
+            // }
+            orb.onEvoke();
+            logger.info("onAttackAssitTaunt:\u961f\u53cb\u6ca1\u625b\u4e0b\u4f24\u5bb3\uff0c\u6b7b\u4e86");
+            EmptyOrbSlot orbSlot = new EmptyOrbSlot();
+            for (i = j + 1; i < AbstractDungeon.player.orbs.size(); ++i) {
+                Collections.swap(AbstractDungeon.player.orbs, i, i - 1);
+            }
+            AbstractDungeon.player.orbs.set(AbstractDungeon.player.orbs.size() - 1, orbSlot);
+            for (i = j; i < AbstractDungeon.player.orbs.size(); ++i) {
+                ((AbstractOrb)AbstractDungeon.player.orbs.get(i)).setSlot(i, AbstractDungeon.player.maxOrbs);
+            }
+            this.onAttackAssitTaunt();
+            break;
+        }
+    }
+
 }

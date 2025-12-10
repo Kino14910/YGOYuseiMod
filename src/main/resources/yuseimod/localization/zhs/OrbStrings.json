@@ -8,5 +8,11 @@
       " NL #yEvoke: Deal #b",
       " damage to all enemies."
     ]
+  },
+  "${modID}:SpeedWarrior": {
+    "NAME": "Speed Warrior",
+    "DESCRIPTION": [
+      "召唤的回合攻击力翻倍。"
+    ]
   }
 }

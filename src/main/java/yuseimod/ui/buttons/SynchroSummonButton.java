@@ -141,35 +141,34 @@ public class SynchroSummonButton extends AbstractPanel {
     }
 
     private Set<Integer> calculatePossibleLevels() {
-    List<AbstractYGOMonster> tuners = new ArrayList<>();
-    List<AbstractYGOMonster> nonTuners = new ArrayList<>();
-    
-    // 分离调整和非调整怪兽
-    for (AbstractOrb orb : AbstractDungeon.player.orbs) {
-        AbstractYGOMonster monster = (AbstractYGOMonster)orb;
-        if (monster.isTuner()) {
-            tuners.add(monster);
-        } else {
-            nonTuners.add(monster);
-        }
-    }
-    
-    Set<Integer> possibleLevels = new HashSet<>();
-    int nonTunerCount = nonTuners.size();
-    
-    // 生成所有非空子集（位掩码技巧，高效！）
-    for (int mask = 1; mask < (1 << nonTunerCount); mask++) {
-        for (AbstractYGOMonster tuner : tuners) {
-            int totalLevel = tuner.level;
-            // 遍历非调整怪兽的子集
-            for (int i = 0; i < nonTunerCount; i++) {
-                if ((mask & (1 << i)) != 0) {
-                    totalLevel += nonTuners.get(i).level;
-                }
+        List<AbstractYGOMonster> tuners = new ArrayList<>();
+        List<AbstractYGOMonster> nonTuners = new ArrayList<>();
+        
+        for (AbstractOrb orb : AbstractDungeon.player.orbs) {
+            AbstractYGOMonster monster = (AbstractYGOMonster)orb;
+            if (monster.isTuner()) {
+                tuners.add(monster);
+            } else {
+                nonTuners.add(monster);
             }
-            possibleLevels.add(totalLevel);
         }
+        
+        Set<Integer> possibleLevels = new HashSet<>();
+        int nonTunerCount = nonTuners.size();
+        
+        // 生成所有非空子集
+        for (int mask = 1; mask < (1 << nonTunerCount); mask++) {
+            for (AbstractYGOMonster tuner : tuners) {
+                int totalLevel = tuner.level;
+                // 遍历非调整怪兽的子集
+                for (int i = 0; i < nonTunerCount; i++) {
+                    if ((mask & (1 << i)) != 0) {
+                        totalLevel += nonTuners.get(i).level;
+                    }
+                }
+                possibleLevels.add(totalLevel);
+            }
+        }
+        return possibleLevels;
     }
-    return possibleLevels;
-}
 }

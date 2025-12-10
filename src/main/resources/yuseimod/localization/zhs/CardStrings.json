@@ -16,5 +16,13 @@
   "${modID}:Defend": {
     "NAME": "防御",
     "DESCRIPTION": "获得 !B! 点 格挡 。"
+  },
+  "${modID}:SpeedWarrior": {
+    "NAME": "高速战士",
+    "DESCRIPTION": "召唤的回合攻击力变为原本攻击力的2倍。"
+  },
+  "${modID}:JunkSynchro": {
+    "NAME": "废品同调士",
+    "DESCRIPTION": "召唤时，特殊召唤弃牌堆1只2星以下的怪兽并将其效果无效化。"
   }
 }

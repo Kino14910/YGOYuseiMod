@@ -16,15 +16,24 @@ public abstract class AbstractMonsterCard extends YuseiCard {
     }
     // Stats
     public int cardATK = 0;
-    public int cardDEF = 0;
-    public int cardLevel = 0;
-    public boolean isTuner = false;
-    public int Index = 0;
+    public void setATK(int cardATK) {
+        this.cardATK = cardATK;
+    }
 
-    public int MagicNum = 0;
-    public int MagicNum2 = 0;
-    public int Effectnum = 0;
-    public int EffectTimes = 1;
+
+    public int cardDEF = 0;
+    public void setDEF(int cardDEF) {
+        this.cardDEF = cardDEF;
+    }
+
+
+    public int cardLevel = 0;
+    public void setLevel(int cardLevel) {
+        this.cardLevel = cardLevel;
+    }
+
+
+    public boolean isTuner = false;
 
     public boolean isTuner() {
         return isTuner;
@@ -33,15 +42,35 @@ public abstract class AbstractMonsterCard extends YuseiCard {
     public void setTuner() {
         this.isTuner = true;
     }
+    public int Index = 0;
+
+    public int MagicNum = 0;
+    public int MagicNum2 = 0;
+    public int Effectnum = 0;
+    public int EffectTimes = 1;
+
 
     public AbstractMonsterCard(String ID, CardRarity rarity) {
         super(ID, 0, CardType.POWER, CardTarget.NONE, rarity);
-        
         this.tags.add(Enums.Monster);
     }
 
     public AbstractMonsterCard(String ID, CardRarity rarity, CardColor color) {
         super(ID, 0, CardType.POWER, CardTarget.NONE, rarity, color);
+        this.tags.add(Enums.Monster);
+    }
+
+    public AbstractMonsterCard(String ID, CardRarity rarity, int cardATK, int cardDEF, int cardLevel) {
+        this(ID, rarity, cardATK, cardDEF, cardLevel, false);
+    }
+
+    public AbstractMonsterCard(String ID, CardRarity rarity, int cardATK, int cardDEF, int cardLevel, boolean isTuner) {
+        super(ID, 0, CardType.POWER, CardTarget.NONE, rarity);
+        this.cardATK = cardATK;
+        this.cardDEF = cardDEF;
+        this.cardLevel = cardLevel;
+        this.isTuner = isTuner;
+        
         this.tags.add(Enums.Monster);
     }
 
@@ -60,4 +89,10 @@ public abstract class AbstractMonsterCard extends YuseiCard {
         // Can't summon if no empty orb slots available
         return false;
     }
+
+
+    public void onSummonMonster() {
+    }
+
+
 }

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.megacrit.cardcrawl.actions.AbstractGameAction;
 import com.megacrit.cardcrawl.actions.common.DamageAction;
@@ -29,32 +28,47 @@ import yuseimod.utils.OrbHelper;
 
 public abstract class AbstractYGOMonster extends CustomOrb {
     public int DEF = 0;
+    public void setDEF(int dEF) {
+        DEF = dEF;
+    }
+
     public int ATK = 0;
+
+    public void setATK(int aTK) {
+        ATK = aTK;
+    }
+
     public int level = 0;
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
     public boolean Taunt = false;
     public boolean upgraded = false;
     public boolean isdead = false;
     public boolean isTuner = false;
     public boolean isSynchro = false;
-    public ArrayList<AbstractAbility> onDamageAbilities = new ArrayList();
-    public ArrayList<AbstractAbility> onEvokeAbilities = new ArrayList();
-    public ArrayList<AbstractAbility> onAttackAbilities = new ArrayList();
+    public ArrayList<AbstractAbility> onDamageAbilities = new ArrayList<AbstractAbility>();
+    public ArrayList<AbstractAbility> onEvokeAbilities = new ArrayList<AbstractAbility>();
+    public ArrayList<AbstractAbility> onAttackAbilities = new ArrayList<AbstractAbility>();
     public String DESCRIPTION;
     public String UPGRADE_DESCRIPTION;
     private float DamageTimer = 0.3f;
-    private float HPFontScale;
+    private float DEFFontScale;
     private float ATKFontScale;
     private float TriggerScale = 1.0f;
     private static String Atk;
     private static String Def;
     private static Texture TauntImg;
 
-    public AbstractYGOMonster(String ID, String NAME, int basePassiveAmount, int baseEvokeAmount, int DEF, String IMG_PATH, String DESCRIPTION, String UPGRADE_DESCRIPTION) {
+    public AbstractYGOMonster(String ID, String NAME, int basePassiveAmount, int baseEvokeAmount, int ATK, int DEF, String IMG_PATH, String DESCRIPTION, String UPGRADE_DESCRIPTION, boolean upgraded) {
         super(ID, NAME, basePassiveAmount, baseEvokeAmount, null, null, IMG_PATH);
+        this.ATK = ATK;
         this.DEF = DEF;
         this.DESCRIPTION = DESCRIPTION;
         this.UPGRADE_DESCRIPTION = UPGRADE_DESCRIPTION;
-        this.HPFontScale = this.fontScale;
+        this.upgraded = upgraded;
+        this.DEFFontScale = this.fontScale;
         this.ATKFontScale = this.fontScale;
         this.updateDescription();
     }
@@ -97,11 +111,11 @@ public abstract class AbstractYGOMonster extends CustomOrb {
         //         if (!(orb instanceof OkamiMio)) continue;
         //         if (!((OkamiMio)orb).upgraded) {
         //             ((OkamiMio)orb).ChangeATK(1, false);
-        //             ((OkamiMio)orb).ChangeHP(2, false);
+        //             ((OkamiMio)orb).ChangeDEF(2, false);
         //             continue;
         //         }
         //         ((OkamiMio)orb).ChangeATK(2, false);
-        //         ((OkamiMio)orb).ChangeHP(3, false);
+        //         ((OkamiMio)orb).ChangeDEF(3, false);
         //     }
         // }
         if (AbstractDungeon.player.hasRelic("Hololive_TheOnlyOne") && (card = OrbHelper.GetCardInstance(this)) != null) {
@@ -129,10 +143,10 @@ public abstract class AbstractYGOMonster extends CustomOrb {
         }
     }
 
-    public void ChangeHP(int DeltaHP, boolean isDamage) {
-        this.DEF += DeltaHP;
-        if (DeltaHP > 0 && this.HPFontScale < 4.0f) {
-            this.HPFontScale += 2.3f;
+    public void ChangeDEF(int DeltaDEF, boolean isDamage) {
+        this.DEF += DeltaDEF;
+        if (DeltaDEF > 0 && this.DEFFontScale < 4.0f) {
+            this.DEFFontScale += 2.3f;
         }
     }
 
@@ -143,18 +157,18 @@ public abstract class AbstractYGOMonster extends CustomOrb {
         }
     }
 
-    public void ChangeStat(int ATK, int HP, boolean isDamage) {
-        this.DEF += HP;
+    public void ChangeStat(int ATK, int DEF, boolean isDamage) {
+        this.DEF += DEF;
         this.ATK += ATK;
-        if (HP > 0 && this.HPFontScale < 4.0f) {
-            this.HPFontScale += 2.3f;
+        if (DEF > 0 && this.DEFFontScale < 4.0f) {
+            this.DEFFontScale += 2.3f;
         }
         if (ATK > 0 && this.ATKFontScale < 4.0f) {
             this.ATKFontScale += 2.3f;
         }
     }
 
-    public void onCallMinion(boolean Left) {
+    public void onSummonMonster(boolean Left) {
     }
 
     public void Trigger() {
@@ -209,8 +223,8 @@ public abstract class AbstractYGOMonster extends CustomOrb {
         } else {
             sb.setColor(this.c);
         }
-        if (this.HPFontScale > 0.7f) {
-            this.HPFontScale -= Gdx.graphics.getDeltaTime() * this.HPFontScale * 2.0f;
+        if (this.DEFFontScale > 0.7f) {
+            this.DEFFontScale -= Gdx.graphics.getDeltaTime() * this.DEFFontScale * 2.0f;
         }
         if (this.ATKFontScale > 0.7f) {
             this.ATKFontScale -= Gdx.graphics.getDeltaTime() * this.ATKFontScale * 2.0f;
@@ -251,11 +265,11 @@ public abstract class AbstractYGOMonster extends CustomOrb {
 
     @Override
     public void renderText(SpriteBatch sb) {
-        FontHelper.renderFontCentered((SpriteBatch)sb, (BitmapFont)FontHelper.cardEnergyFont_L, (String)Integer.toString(this.ATK), (float)(this.cX - NUM_X_OFFSET * 1.8f), (float)(this.cY + this.bobEffect.y / 2.0f + NUM_Y_OFFSET - 30.0f), (Color)new Color(1.0f, 1.0f, 0.4f, 1.0f), (float)this.ATKFontScale);
-        FontHelper.renderFontCentered((SpriteBatch)sb, (BitmapFont)FontHelper.cardEnergyFont_L, (String)"/", (float)this.cX, (float)(this.cY + this.bobEffect.y / 2.0f + NUM_Y_OFFSET - 30.0f), (Color)new Color(1.0f, 1.0f, 1.0f, 1.0f), (float)this.fontScale);
-        FontHelper.renderFontCentered((SpriteBatch)sb, (BitmapFont)FontHelper.cardEnergyFont_L, (String)Integer.toString(this.DEF), (float)(this.cX + NUM_X_OFFSET * 1.8f), (float)(this.cY + this.bobEffect.y / 2.0f + NUM_Y_OFFSET - 30.0f), (Color)new Color(1.0f, 0.5f, 0.5f, 1.0f), (float)this.HPFontScale);
+        FontHelper.renderFontCentered(sb, FontHelper.cardEnergyFont_L, Integer.toString(this.ATK), (this.cX - NUM_X_OFFSET * 1.8f), (this.cY + this.bobEffect.y / 2.0f + NUM_Y_OFFSET - 30.0f), new Color(1.0f, 1.0f, 0.4f, 1.0f), this.ATKFontScale);
+        FontHelper.renderFontCentered(sb, FontHelper.cardEnergyFont_L, "/", this.cX, (this.cY + this.bobEffect.y / 2.0f + NUM_Y_OFFSET - 30.0f), new Color(1.0f, 1.0f, 1.0f, 1.0f), this.fontScale);
+        FontHelper.renderFontCentered(sb, FontHelper.cardEnergyFont_L, Integer.toString(this.DEF), (this.cX + NUM_X_OFFSET * 1.8f), (this.cY + this.bobEffect.y / 2.0f + NUM_Y_OFFSET - 30.0f), new Color(1.0f, 0.5f, 0.5f, 1.0f), this.DEFFontScale);
         if (this.upgraded) {
-            FontHelper.renderFontCentered((SpriteBatch)sb, (BitmapFont)FontHelper.cardEnergyFont_L, (String)"+", (float)this.cX, (float)(this.cY + this.bobEffect.y / 2.0f + NUM_Y_OFFSET + 70.0f * Settings.scale), (Color)new Color(1.0f, 1.0f, 1.0f, 1.0f), (float)(this.fontScale * 1.6f));
+            FontHelper.renderFontCentered(sb, FontHelper.cardEnergyFont_L, "+", this.cX, (this.cY + this.bobEffect.y / 2.0f + NUM_Y_OFFSET + 70.0f * Settings.scale), new Color(1.0f, 1.0f, 1.0f, 1.0f), (this.fontScale * 1.6f));
         }
     }
 
@@ -265,7 +279,7 @@ public abstract class AbstractYGOMonster extends CustomOrb {
             Def = "\u751f\u547d\uff1a";
         } else {
             Atk = "ATK:";
-            Def = "     HP:";
+            Def = "     DEF:";
         }
         TauntImg = ImageMaster.loadImage((String)"img/UI/students/TauntImg.png");
     }
